@@ -5,38 +5,41 @@ import { Weather } from '../models/weatherData'
 
 type weatherContextObj = {
     data: Partial<Weather>;
-    city: string;
     loading: boolean;
+    error: string;
     fetchData: (text: string) => void;
 }
 
 export const weatherContext = createContext<weatherContextObj>({
     data: {},
-    city: '',
     loading: false,
+    error: '',
     fetchData: () => {}
 });
 
 const WeatherContextProvider: React.FC = (props) => {
-    const [city, setCity] = useState('');
     const [weather, setWeather] = useState<Partial<Weather>>({});
     const [loading, setLoading] = useState(false);
+    const [error, setError] = useState('');
 
     const fetchWeatherHandler = (text:string) => {
-        setCity(text);
         setLoading(true);
-        axios.get(`https://api.openweathermap.org/data/2.5/weather?q=${text}&units=imperial&appid=${process.env.NEXT_PUBLIC_WEATHER_KEY}`)
+        axios.get(`https://api.openweathermap.org/data/2.5/weather?q=${text}&units=metric&appid=${process.env.NEXT_PUBLIC_WEATHER_KEY}`)
         .then(response => {
-        setWeather(response.data);
-        });
-        setCity('');
-        setLoading(false);
+            setWeather(response.data);
+            setLoading(false);
+            setError('');
+        }).catch(error => {
+            setError(error.message);
+            setLoading(false);
+            setWeather({});
+        });  
     }
 
     const contextValue: weatherContextObj = {
         data: weather,
-        city: city,
         loading: loading,
+        error: error,
         fetchData: fetchWeatherHandler 
     }
 
